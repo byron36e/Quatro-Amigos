@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign Up</title>
+
+<style>
+  body {
+    margin: 0; 
+    background: #454545;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    align-items: center;
+  }
+  .container {
+    background: #ccc;
+    width: 360px;
+    padding: 20px 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .logo-box {
+    background: white;
+    width: 160px;
+    height: 120px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  form {
+    background: white;
+    width: 280px;
+    border-radius: 12px;
+    padding: 25px 20px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #000;
+  }
+  input[type="email"],
+  input[type="text"],
+  input[type="password"] {
+    border: 1.2px solid #ccc;
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border 0.3s ease;
+  }
+  input::placeholder {
+    color: #bbb;
+  }
+  input:focus {
+    border-color: #888;
+  }
+  button {
+    background: #222;
+    color: white;
+    border: none;
+    padding: 11px 0;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  button:hover {
+    background: #444;
+  }
+  #errorMsg {
+    color: red;
+    font-size: 13px;
+    margin-bottom: 15px;
+    display: none;
+  }
+</style>
+
+<!-- Firebase JS SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+  <div class="logo-box" aria-label="App logo">
+    <img src="STLOGO2.JPG" alt="Logo" style="width:150px;height:100px;">
+  </div>
+
+  <form id="signupForm" aria-label="Sign Up form">
+    <div id="errorMsg"></div>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Value" required autocomplete="username" />
+
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="Value" required autocomplete="name" />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Value" required autocomplete="new-password" />
+
+    <button type="submit">Sign Up</button>
+  </form>
+</div>
+
+<script>
+  // Firebase config - replace with your actual Firebase project credentials
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    // ...other firebase config if needed
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const form = document.getElementById('signupForm');
+  const errorMsg = document.getElementById('errorMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.style.display = 'none';
+    errorMsg.textContent = '';
+
+    const email = document.getElementById('email').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (username.length < 3) {
+      errorMsg.textContent = 'Username must be at least 3 characters long.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    try {
+      // Create user in Firebase Auth
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      // Save username to Firestore under users collection document with uid as id
+      await db.collection('users').doc(user.uid).set({
+        username: username,
+        email: email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert('Sign up successful! You can now log in.');
+
+      // Optionally redirect to login page
+      // window.location.href = 'login.html';
+
+    } catch (error) {
+      errorMsg.textContent = error.message;
+      errorMsg.style.display = 'block';
+    }
+  });
+</script>
+
+</body>
+</html>
